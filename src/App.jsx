@@ -85,16 +85,15 @@ const initialTasks = [
     due: "Oct 17",
   },
 ];
-
 const navigation = [
   { label: "Dashboard", icon: "▦" },
   { label: "Projects", icon: "▤" },
   { label: "My Tasks", icon: "✓" },
+  { label: "Analytics", icon: "▥" },
   { label: "AI Meeting Assistant", icon: "✦" },
   { label: "Team", icon: "♧" },
   { label: "Settings", icon: "⚙" },
 ];
-
 const owners = [
   { initials: "AM", name: "Alex Morgan" },
   { initials: "TN", name: "Taylor N." },
@@ -1266,6 +1265,168 @@ if (!session) {
               </div>
             </>
           )}
+
+{activeNav === "Analytics" && (
+  <>
+    <div className="welcome-row">
+      <div>
+        <p className="eyebrow">TEAM PERFORMANCE</p>
+        <h1>Productivity Analytics</h1>
+        <p className="welcome-subtitle">
+          Monitor team performance and understand the contribution
+          of AI-assisted collaboration.
+        </p>
+      </div>
+    </div>
+
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+      gap: "16px",
+      marginBottom: "24px"
+    }}>
+
+      <section className="panel">
+        <p className="eyebrow">TOTAL TASKS</p>
+        <h1>{tasks.length}</h1>
+        <p className="muted-text">Tasks recorded by your team</p>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">COMPLETED TASKS</p>
+        <h1>
+          {tasks.filter(task =>
+            ["done", "completed"].includes(
+              (task.status || "").toLowerCase()
+            )
+          ).length}
+        </h1>
+        <p className="muted-text">Successfully completed</p>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">AI-ASSISTED TASKS</p>
+        <h1>
+          {tasks.filter(task =>
+            task.creation_source === "ai_assisted"
+          ).length}
+        </h1>
+        <p className="muted-text">Tasks created through AI assistance</p>
+      </section>
+
+      <section className="panel">
+        <p className="eyebrow">OVERDUE TASKS</p>
+        <h1>
+          {tasks.filter(task => task.overdue === true).length}
+        </h1>
+        <p className="muted-text">Tasks requiring attention</p>
+      </section>
+
+    </div>
+
+    <section className="panel" style={{ marginBottom: "20px" }}>
+      <h2>Task completion performance</h2>
+
+      <p className="muted-text">
+        Compare completion outcomes for manual and AI-assisted tasks.
+      </p>
+
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: "25px",
+        marginTop: "24px"
+      }}>
+
+        <div>
+          <strong>Manual tasks</strong>
+
+          <h1>
+            {(() => {
+              const group = tasks.filter(
+                task => task.creation_source === "manual"
+              );
+              const completed = group.filter(task =>
+                ["done", "completed"].includes(
+                  (task.status || "").toLowerCase()
+                )
+              ).length;
+
+              return group.length
+                ? `${Math.round(completed / group.length * 100)}%`
+                : "No data";
+            })()}
+          </h1>
+
+          <p className="muted-text">
+            Completion rate for manually created tasks.
+          </p>
+        </div>
+
+        <div>
+          <strong>AI-assisted tasks</strong>
+
+          <h1>
+            {(() => {
+              const group = tasks.filter(
+                task => task.creation_source === "ai_assisted"
+              );
+              const completed = group.filter(task =>
+                ["done", "completed"].includes(
+                  (task.status || "").toLowerCase()
+                )
+              ).length;
+
+              return group.length
+                ? `${Math.round(completed / group.length * 100)}%`
+                : "No data";
+            })()}
+          </h1>
+
+          <p className="muted-text">
+            Completion rate for AI-assisted tasks.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section className="panel">
+      <h2>Average task completion time</h2>
+
+      <h1>
+        {(() => {
+          const completed = tasks.filter(
+            task => task.completed_at && task.created_at
+          );
+
+          if (!completed.length) return "No data yet";
+
+          const averageSeconds = completed.reduce(
+            (total, task) => {
+              const elapsed =
+                (new Date(task.completed_at).getTime() -
+                 new Date(task.created_at).getTime()) / 1000;
+
+              return total + Math.max(0, elapsed);
+            },
+            0
+          ) / completed.length;
+
+          return averageSeconds < 60
+            ? `${averageSeconds.toFixed(1)} seconds`
+            : `${(averageSeconds / 60).toFixed(1)} minutes`;
+        })()}
+      </h1>
+
+      <p className="muted-text">
+        Average elapsed time between task creation and completion.
+        This measures elapsed time, not active working time.
+      </p>
+    </section>
+
+  </>
+)}
 
           {!["Dashboard", "My Tasks", "AI Meeting Assistant"].includes(
             activeNav
