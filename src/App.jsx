@@ -1281,18 +1281,18 @@ if (!session) {
 
     <div style={{
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
       gap: "16px",
       marginBottom: "24px"
     }}>
 
-      <section className="panel">
+      <section className="panel analytics-metric-card">
         <p className="eyebrow">TOTAL TASKS</p>
         <h1>{tasks.length}</h1>
         <p className="muted-text">Tasks recorded by your team</p>
       </section>
 
-      <section className="panel">
+      <section className="panel analytics-metric-card">
         <p className="eyebrow">COMPLETED TASKS</p>
         <h1>
           {tasks.filter(task =>
@@ -1304,7 +1304,7 @@ if (!session) {
         <p className="muted-text">Successfully completed</p>
       </section>
 
-      <section className="panel">
+      <section className="panel analytics-metric-card">
         <p className="eyebrow">AI-ASSISTED TASKS</p>
         <h1>
           {tasks.filter(task =>
@@ -1314,7 +1314,7 @@ if (!session) {
         <p className="muted-text">Tasks created through AI assistance</p>
       </section>
 
-      <section className="panel">
+      <section className="panel analytics-metric-card">
         <p className="eyebrow">OVERDUE TASKS</p>
         <h1>
           {tasks.filter(task => task.overdue === true).length}
