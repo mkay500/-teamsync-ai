@@ -1392,6 +1392,89 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
     </section>
 
     <section className="panel">
+
+
+
+<section className="panel" style={{ marginBottom: "20px" }}>
+  <h2>Manual vs AI-Assisted Performance</h2>
+
+  <p className="muted-text">
+    Compare task completion outcomes across the two creation methods.
+  </p>
+
+  {[
+    { label: "Manual tasks", source: "manual", color: "#368BCE" },
+    { label: "AI-assisted tasks", source: "ai_assisted", color: "#9876DD" },
+  ].map((group) => {
+    const groupTasks = tasks.filter(
+      (task) => (task.creation_source || "manual") === group.source
+    );
+
+    const completed = groupTasks.filter((task) =>
+      ["done", "completed"].includes(
+        (task.status || "").toLowerCase()
+      )
+    ).length;
+
+    const rate = groupTasks.length
+      ? Math.round((completed / groupTasks.length) * 100)
+      : 0;
+
+    return (
+      <div
+        key={group.source}
+        style={{ marginTop: "25px" }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "8px",
+            marginBottom: "10px",
+          }}
+        >
+          <strong style={{ fontSize: "13px" }}>
+            {group.label}
+          </strong>
+
+          <span style={{ fontSize: "12px", color: "#777d92" }}>
+            {completed} / {groupTasks.length} completed ({rate}%)
+          </span>
+        </div>
+
+        <div
+          style={{
+            height: "14px",
+            background: "#edf0f5",
+            borderRadius: "20px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${rate}%`,
+              background: group.color,
+              borderRadius: "20px",
+              transition: "width 0.4s ease",
+            }}
+          />
+        </div>
+
+        <p
+          className="muted-text"
+          style={{ marginTop: "7px" }}
+        >
+          {groupTasks.length - completed} outstanding tasks
+        </p>
+      </div>
+    );
+  })}
+</section>
+
+
       <h2>Average task completion time</h2>
 
       <h1>
