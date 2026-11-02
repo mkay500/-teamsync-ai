@@ -270,7 +270,6 @@ const [approvingIndex, setApprovingIndex] = useState(null);
 
     return matchesFilter && matchesSearch && matchesPage;
   });
-
 async function createTask(event) {
   event.preventDefault();
 
@@ -293,6 +292,7 @@ async function createTask(event) {
     .from("tasks")
     .insert({
       team_id: teamId,
+      creation_source: "manual",
       title: newTitle.trim(),
       project: "General",
       owner: selectedOwner.name,
@@ -423,6 +423,8 @@ async function approveActionItem(item, index) {
     }) || owners[0];
 
     const taskToSave = {
+      team_id: teamId,                    // ADD
+  creation_source: "ai_assisted",
       title: item.title,
       project: "General",
       owner: matchedOwner.name,
