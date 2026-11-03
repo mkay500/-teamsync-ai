@@ -107,6 +107,11 @@ function App() {
   const [databaseError, setDatabaseError] = useState("");
   const [session, setSession] = useState(null);
   const [teamId, setTeamId] = useState(null);
+
+  const [teamActivity, setTeamActivity] = useState([]);
+const [activityLoading, setActivityLoading] = useState(false);
+const [activityError, setActivityError] = useState("");
+
 const [authLoading, setAuthLoading] = useState(true);
 const [authMode, setAuthMode] = useState("signin");
 const [authEmail, setAuthEmail] = useState("");
@@ -189,6 +194,54 @@ useEffect(() => {
     cancelled = true;
   };
 }, [session?.user?.id]);
+
+
+useEffect(() => {
+  let cancelled = false;
+
+  async function loadTeamActivity() {
+    if (!teamId) {
+      setTeamActivity([]);
+      return;
+    }
+
+    setActivityLoading(true);
+    setActivityError("");
+
+    try {
+      const { data, error } = await supabase
+        .from("task_activity")
+        .select("*")
+        .eq("team_id", teamId)
+        .order("happened_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      if (!cancelled) {
+        setTeamActivity(data ?? []);
+      }
+    } catch (error) {
+      console.error("Could not load team activity:", error);
+
+      if (!cancelled) {
+        setActivityError(error.message);
+        setTeamActivity([]);
+      }
+    } finally {
+      if (!cancelled) {
+        setActivityLoading(false);
+      }
+    }
+  }
+
+  loadTeamActivity();
+
+  return () => {
+    cancelled = true;
+  };
+}, [teamId, tasks]);
+
 
 useEffect(() => {
   let active = true;
@@ -1473,6 +1526,237 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
     );
   })}
 </section>
+
+
+<section className="panel" style={{ marginBottom: "20px" }}>
+  <h2>Weekly Productivity Trends</h2>
+  <p className="muted-text">
+    Track task creation and completion over the last seven days.
+  </p>
+
+  {(() => {
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - (6 - index));
+
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      const created = tasks.filter(task => {
+        const time = new Date(task.created_at);
+        return time >= date && time < nextDate;
+      });
+
+      const completed = tasks.filter(task => {
+        if (!task.completed_at) return false;
+        const time = new Date(task.completed_at);
+        return time >= date && time < nextDate;
+      });
+
+      return {
+        label: date.toLocaleDateString(undefined, {
+          weekday: "short"
+        }),
+        manual: created.filter(
+          task => task.creation_source !== "ai_assisted"
+        ).length,
+        ai: created.filter(
+          task => task.creation_source === "ai_assisted"
+        ).length,
+        completed: completed.length
+      };
+    });
+
+    const maxValue = Math.max(
+      1,
+      ...days.map(day =>
+        Math.max(day.manual, day.ai, day.completed)
+      )
+    );
+
+    return (
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+        gap: "8px",
+        alignItems: "end",
+        marginTop: "28px"
+      }}>
+        {days.map((day, index) => (
+          <div key={index} style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "9px",
+            minWidth: 0
+          }}>
+            <div style={{
+              height: "130px",
+              display: "flex",
+              alignItems: "end",
+              gap: "3px",
+              width: "100%",
+              justifyContent: "center",
+              borderBottom: "1px solid #e7e8f0"
+            }}>
+              {[ 
+                { value: day.manual, color: "#368BCE" },
+                { value: day.ai, color: "#9876DD" },
+                { value: day.completed, color: "#239B74" }
+              ].map((bar, i) => (
+                <div
+                  key={i}
+                  title={`${bar.value} tasks`}
+                  style={{
+                    width: "7px",
+                    maxWidth: "22%",
+                    height: bar.value
+                      ? `${Math.max(4, bar.value / maxValue * 115)}px`
+                      : "0px",
+                    background: bar.color,
+                    borderRadius: "4px 4px 0 0"
+                  }}
+                />
+              ))}
+            </div>
+
+            <span style={{
+              fontSize: "11px",
+              color: "#656b80"
+            }}>
+              {day.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  })()}
+
+  <div style={{
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "18px",
+    marginTop: "24px"
+  }}>
+    {[
+      { label: "Manual created", color: "#368BCE" },
+      { label: "AI-assisted created", color: "#9876DD" },
+      { label: "Completed", color: "#239B74" }
+    ].map(item => (
+      <div key={item.label} style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "7px",
+        fontSize: "11px",
+        color: "#656b80"
+      }}>
+        <span style={{
+          width: "9px",
+          height: "9px",
+          background: item.color,
+          borderRadius: "3px"
+        }} />
+        {item.label}
+      </div>
+    ))}
+  </div>
+</section>
+
+
+
+<section className="panel" style={{ marginBottom: "20px" }}>
+  <h2>Recent Team Activity</h2>
+
+  <p className="muted-text">
+    Follow recent task creation and completion across your team.
+  </p>
+
+  {activityLoading ? (
+    <p className="muted-text">Loading team activity...</p>
+  ) : activityError ? (
+    <p className="muted-text">
+      Could not load activity: {activityError}
+    </p>
+  ) : teamActivity.length === 0 ? (
+    <p className="muted-text">
+      No team activity has been recorded yet.
+    </p>
+  ) : (
+    <div style={{
+      display: "grid",
+      gap: "16px",
+      marginTop: "22px"
+    }}>
+      {teamActivity.map((item) => {
+        const relatedTask = tasks.find(
+          task => String(task.id) === String(item.task_id)
+        );
+
+        const eventLabel =
+          item.event_type === "task_created_ai"
+            ? "AI-assisted task created"
+            : item.event_type === "task_created_manual"
+              ? "Manual task created"
+              : "Task status updated";
+
+        return (
+          <div
+            key={item.id}
+            style={{
+              display: "flex",
+              gap: "13px",
+              alignItems: "flex-start",
+              borderBottom: "1px solid #eceef4",
+              paddingBottom: "14px"
+            }}
+          >
+            <span className="metric-icon purple-icon">
+              {item.event_type === "task_created_ai"
+                ? "✦"
+                : item.event_type === "status_changed"
+                  ? "✓"
+                  : "+"}
+            </span>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <strong style={{
+                fontSize: "13px",
+                color: "#30354b"
+              }}>
+                {eventLabel}
+              </strong>
+
+              <p style={{
+                fontSize: "12px",
+                marginTop: "5px",
+                overflowWrap: "anywhere"
+              }}>
+                {relatedTask?.title || `Task #${item.task_id}`}
+              </p>
+
+              {item.event_type === "status_changed" && (
+                <p className="muted-text">
+                  {item.previous_status || "Previous status"}
+                  {" → "}
+                  {item.new_status || "New status"}
+                </p>
+              )}
+
+              <p className="muted-text" style={{
+                fontSize: "10px",
+                marginTop: "6px"
+              }}>
+                {new Date(item.happened_at).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</section>
+
 
 
       <h2>Average task completion time</h2>
