@@ -816,6 +816,7 @@
   padding: 27px 18px;
 }
 
+
 .progress-donut {
   display: grid;
   place-items: center;
@@ -824,10 +825,11 @@
   flex-shrink: 0;
   border-radius: 50%;
   background: conic-gradient(
-    #6c5fee var(--progress),
-    #eff0f6 var(--progress)
+    #08B6CE var(--progress),
+    #000000 var(--progress)
   );
 }
+
 
 .donut-inner {
   display: flex;
@@ -1355,4 +1357,345 @@
   text-align: center;
   line-height: 1.5;
   margin: 0;
+}
+
+
+
+/* =========================================================
+   TeamSync AI — charcoal, lime and teal visual theme
+   Existing layout and component structure are intentionally
+   preserved; these rules change colour and typography only.
+   ========================================================= */
+
+:root {
+  --ts-charcoal: #111827;
+  --ts-charcoal-soft: #1b2636;
+  --ts-lime: #dfff4f;
+  --ts-lime-strong: #c9f52f;
+  --ts-teal: #08b6ce;
+  --ts-teal-dark: #078da3;
+  --ts-canvas: #f3f5f7;
+  --ts-text: #172033;
+  --ts-muted: #778196;
+  --ts-border: #e5e9ef;
+}
+
+.app-shell {
+  background: var(--ts-canvas);
+}
+
+/* Charcoal sidebar */
+.sidebar {
+  background: var(--ts-charcoal);
+  border-right-color: var(--ts-charcoal);
+  color: #fff;
+}
+
+.brand-name strong,
+.workspace-switcher strong,
+.profile-details strong {
+  color: #fff;
+}
+
+.brand-name span,
+.workspace-switcher span,
+.profile-details span,
+.switcher-arrow,
+.nav-label {
+  color: #aab4c3;
+}
+
+.brand-mark {
+  color: var(--ts-charcoal);
+  background: var(--ts-lime);
+}
+
+.workspace-switcher {
+  border-color: #344052;
+  background: var(--ts-charcoal-soft);
+}
+
+.workspace-icon {
+  background: #293548;
+  color: var(--ts-lime);
+}
+
+.nav-item {
+  color: #d1d8e2;
+}
+
+.nav-item:hover {
+  color: var(--ts-lime);
+  background: #253144;
+}
+
+.nav-item-active {
+  color: var(--ts-charcoal);
+  background: var(--ts-lime);
+}
+
+.nav-item-active .nav-icon {
+  color: var(--ts-charcoal);
+}
+
+.new-badge {
+  color: var(--ts-charcoal);
+  background: #efffae;
+}
+
+.help-card {
+  color: var(--ts-charcoal);
+  background: var(--ts-lime);
+}
+
+.help-card p,
+.help-card span {
+  color: #26320b;
+}
+
+.help-icon {
+  color: var(--ts-charcoal);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* Page canvas and typography */
+.page-content {
+  background: var(--ts-canvas);
+}
+
+.welcome-row h1,
+.placeholder-page h1 {
+  color: var(--ts-text);
+  font-family: "Manrope", "Inter", sans-serif;
+}
+
+.welcome-row h1 span,
+.note-sparkle {
+  color: var(--ts-teal);
+}
+
+.eyebrow {
+  color: #7c8799;
+}
+
+.welcome-subtitle,
+.muted-text {
+  color: var(--ts-muted);
+}
+
+/* New task action */
+.primary-button {
+  color: var(--ts-charcoal);
+  background: var(--ts-lime);
+  box-shadow: 0 5px 12px rgba(173, 213, 40, 0.18);
+}
+
+.primary-button:hover {
+  color: var(--ts-charcoal);
+  background: var(--ts-lime-strong);
+}
+
+/* Metric cards: first card lime; remaining cards use a charcoal
+   heading strip and lime lower information area. */
+.metric-card {
+  border-color: var(--ts-border);
+  background: #fff;
+}
+
+.metric-card:nth-child(1) {
+  background: var(--ts-lime);
+  border-color: var(--ts-lime);
+}
+
+.metric-card:nth-child(n + 2) .metric-top {
+  margin: -20px -20px 0;
+  padding: 15px 20px;
+  border-radius: 14px 14px 0 0;
+  background: var(--ts-charcoal);
+}
+
+.metric-card:nth-child(n + 2) .metric-label {
+  color: #fff;
+}
+
+.metric-card:nth-child(n + 2) .metric-number,
+.metric-card:nth-child(n + 2) .metric-footnote {
+  color: var(--ts-charcoal);
+}
+
+.metric-card:nth-child(n + 2) {
+  background: var(--ts-lime);
+  border-color: var(--ts-lime);
+}
+
+.metric-icon.purple-icon {
+  color: var(--ts-charcoal);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.metric-icon.green-icon,
+.metric-icon.blue-icon,
+.metric-icon.orange-icon {
+  color: var(--ts-lime);
+  background: #293548;
+}
+
+/* Keep the main task table and ordinary panels white */
+.panel,
+.tasks-panel {
+  border-color: var(--ts-border);
+  background: #fff;
+}
+
+.panel-heading h2,
+.notes-panel h2,
+.workflow-panel h2,
+.task-modal h2 {
+  color: var(--ts-text);
+}
+
+.count-pill,
+.filter-chip:hover {
+  color: var(--ts-charcoal);
+  background: #efffae;
+}
+
+.text-button,
+.ai-link {
+  color: var(--ts-teal-dark);
+}
+
+.filter-chip-active {
+  color: var(--ts-charcoal);
+  background: var(--ts-lime);
+}
+
+/* Team progress panel in lime */
+.progress-panel {
+  border-color: var(--ts-lime);
+  background: var(--ts-lime);
+}
+
+.progress-panel .panel-heading h2 {
+  color: var(--ts-charcoal);
+}
+
+.progress-panel .progress-note {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.progress-panel .progress-note p {
+  color: #48532a;
+}
+
+/* Teal productivity ring and chart indicators */
+.progress-donut {
+  background: conic-gradient(
+    var(--ts-teal) var(--progress),
+    rgba(255, 255, 255, 0.8) var(--progress)
+  );
+}
+
+.donut-inner {
+  background: #fff;
+}
+
+.completed-dot {
+  background: var(--ts-teal);
+}
+
+.progress-dot {
+  background: var(--ts-lime-strong);
+}
+
+/* Teal AI assistant card */
+.ai-card {
+  border-color: var(--ts-teal);
+  background: var(--ts-teal);
+}
+
+.ai-card h2,
+.ai-card > p {
+  color: var(--ts-charcoal);
+}
+
+.ai-symbol {
+  color: var(--ts-charcoal);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.coming-soon {
+  color: var(--ts-charcoal);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.ai-link {
+  color: var(--ts-charcoal);
+}
+
+/* Keep task status meanings clear and accessible */
+.status-done {
+  color: #08794e;
+  background: #e4f7ed;
+}
+
+.status-in-progress {
+  color: #086f82;
+  background: #dff7fb;
+}
+
+.status-to-do {
+  color: #566174;
+  background: #edf0f4;
+}
+
+/* Focus treatment */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-color: var(--ts-teal);
+}
+
+/* Small-screen metric spacing remains intact */
+@media (max-width: 700px) {
+  .metric-card:nth-child(n + 2) .metric-top {
+    margin: -16px -16px 0;
+    padding: 13px 16px;
+  }
+}
+
+.total-tasks-card {
+  background: #08B6CE;
+  border-color: #08B6CE;
+}
+
+.total-tasks-card .metric-number {
+  color: #111827;
+}
+
+.total-tasks-card .metric-footnote {
+  color: #164E59;
+}
+
+.metrics-grid > .metric-card:first-child {
+  background-color: #08B6CE !important;
+  border-color: #08B6CE !important;
+}
+
+.metrics-grid > .metric-card:first-child,
+.metrics-grid > .metric-card:first-child .metric-number,
+.metrics-grid > .metric-card:first-child .metric-label,
+.metrics-grid > .metric-card:first-child .metric-footnote {
+  color: #000000 !important;
+}
+
+
+.progress-donut {
+  background: conic-gradient(
+    #08B6CE 0%,
+    #08B6CE var(--progress),
+    #000000 var(--progress),
+    #000000 100%
+  ) !important;
 }

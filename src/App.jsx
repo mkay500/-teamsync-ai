@@ -977,7 +977,7 @@ if (!session) {
                 <div className="metric-card">
                   <div className="metric-top">
                     <span className="metric-icon purple-icon">▦</span>
-                    <span className="metric-label">Total tasks</span>
+                    
                   </div>
                   <div className="metric-number">{tasks.length}</div>
                   <div className="metric-footnote">Across the workspace</div>
