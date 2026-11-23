@@ -312,6 +312,7 @@ const isCompletedForPulse = (task) =>
     (task.status || "").toLowerCase()
   );
 
+
 const pulseOpenTasks = tasks.filter(
   (task) => !isCompletedForPulse(task)
 );
@@ -339,20 +340,22 @@ const pulseStatus =
       ? "Needs attention"
       : "On track";
 
-  const filteredTasks = tasks.filter((task) => {
-    const matchesFilter =
-      activeFilter === "All" || task.status === activeFilter;
+const filteredTasks = tasks.filter((task) => {
+  const matchesFilter =
+    activeFilter === "All" || task.status === activeFilter;
 
-    const matchesSearch =
-      task.title.toLowerCase().includes(search.toLowerCase()) ||
-      task.project.toLowerCase().includes(search.toLowerCase()) ||
-      task.owner.toLowerCase().includes(search.toLowerCase());
+  const matchesSearch =
+    task.title.toLowerCase().includes(search.toLowerCase()) ||
+    task.project.toLowerCase().includes(search.toLowerCase()) ||
+    task.owner.toLowerCase().includes(search.toLowerCase());
 
-    const matchesPage =
-      activeNav !== "My Tasks" || task.owner === "Alex Morgan";
+  const matchesPage =
+    activeNav !== "My Tasks" || task.owner === "Alex Morgan";
 
-    return matchesFilter && matchesSearch && matchesPage;
-  });
+  return matchesFilter && matchesSearch && matchesPage;
+});
+
+
 async function createTask(event) {
   event.preventDefault();
 
@@ -1408,32 +1411,6 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
 
     </div>
 
-const pulseOpenTasks = tasks.filter(
-  task => task.status !== "Done"
-);
-
-const pulseOverdueTasks = pulseOpenTasks.filter(
-  task => task.overdue === true
-);
-
-const pulseHighPriority = pulseOpenTasks.filter(
-  task => task.priority === "High"
-);
-
-const pulseWorkload = Object.entries(
-  pulseOpenTasks.reduce((acc, task) => {
-    const owner = task.owner || "Unassigned";
-    acc[owner] = (acc[owner] || 0) + 1;
-    return acc;
-  }, {})
-).sort((a, b) => b[1] - a[1]);
-
-const pulseStatus =
-  tasks.length === 0
-    ? "Waiting for tasks"
-    : pulseOverdueTasks.length > 0
-      ? "Needs attention"
-      : "On track";
 
 <section className="panel" style={{ marginBottom: "20px" }}>
   <p className="eyebrow">AUTOMATED TEAM INSIGHTS</p>
