@@ -307,6 +307,37 @@ const [approvingIndex, setApprovingIndex] = useState(null);
   const completionRate = tasks.length
     ? Math.round((completedCount / tasks.length) * 100)
     : 0;
+const isCompletedForPulse = (task) =>
+  ["done", "completed"].includes(
+    (task.status || "").toLowerCase()
+  );
+
+const pulseOpenTasks = tasks.filter(
+  (task) => !isCompletedForPulse(task)
+);
+
+const pulseOverdueTasks = pulseOpenTasks.filter(
+  (task) => task.overdue === true
+);
+
+const pulseHighPriority = pulseOpenTasks.filter(
+  (task) => (task.priority || "").toLowerCase() === "high"
+);
+
+const pulseWorkload = Object.entries(
+  pulseOpenTasks.reduce((acc, task) => {
+    const owner = task.owner || "Unassigned";
+    acc[owner] = (acc[owner] || 0) + 1;
+    return acc;
+  }, {})
+).sort((a, b) => b[1] - a[1]);
+
+const pulseStatus =
+  tasks.length === 0
+    ? "Waiting for tasks"
+    : pulseOverdueTasks.length > 0
+      ? "Needs attention"
+      : "On track";
 
   const filteredTasks = tasks.filter((task) => {
     const matchesFilter =
@@ -974,7 +1005,7 @@ if (!session) {
               </div>
 
               <div className="metrics-grid">
-                <div className="metric-card">
+                <div className="metric-card total-tasks-card">
                   <div className="metric-top">
                     <span className="metric-icon purple-icon">▦</span>
                     
@@ -1376,6 +1407,100 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
       </section>
 
     </div>
+
+const pulseOpenTasks = tasks.filter(
+  task => task.status !== "Done"
+);
+
+const pulseOverdueTasks = pulseOpenTasks.filter(
+  task => task.overdue === true
+);
+
+const pulseHighPriority = pulseOpenTasks.filter(
+  task => task.priority === "High"
+);
+
+const pulseWorkload = Object.entries(
+  pulseOpenTasks.reduce((acc, task) => {
+    const owner = task.owner || "Unassigned";
+    acc[owner] = (acc[owner] || 0) + 1;
+    return acc;
+  }, {})
+).sort((a, b) => b[1] - a[1]);
+
+const pulseStatus =
+  tasks.length === 0
+    ? "Waiting for tasks"
+    : pulseOverdueTasks.length > 0
+      ? "Needs attention"
+      : "On track";
+
+<section className="panel" style={{ marginBottom: "20px" }}>
+  <p className="eyebrow">AUTOMATED TEAM INSIGHTS</p>
+  <h2>✦ Team Pulse</h2>
+
+  <p className="muted-text">
+    A live overview of your team's workload and task health.
+  </p>
+
+  <div style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+    gap: "20px",
+    marginTop: "20px"
+  }}>
+    <div>
+      <p className="muted-text">Open tasks</p>
+      <h1>{pulseOpenTasks.length}</h1>
+    </div>
+
+    <div>
+      <p className="muted-text">Overdue tasks</p>
+      <h1>{pulseOverdueTasks.length}</h1>
+    </div>
+
+    <div>
+      <p className="muted-text">High-priority tasks</p>
+      <h1>{pulseHighPriority.length}</h1>
+    </div>
+  </div>
+
+  <div style={{ marginTop: "20px" }}>
+    <h3>Workload distribution</h3>
+
+    {pulseWorkload.length > 0 ? (
+      pulseWorkload.map(([owner, count]) => (
+        <div key={owner} style={{
+          display: "flex",
+          justifyContent: "space-between",
+          padding: "10px 0",
+          borderBottom: "1px solid #edf0f5"
+        }}>
+          <span>{owner}</span>
+          <strong>{count} open tasks</strong>
+        </div>
+      ))
+    ) : (
+      <p className="muted-text">No outstanding tasks.</p>
+    )}
+  </div>
+
+  <div style={{
+    marginTop: "20px",
+    padding: "14px",
+    borderRadius: "10px",
+    background: "#f5f6fb"
+  }}>
+    <strong>Team recommendation</strong>
+    <p className="muted-text">
+      {pulseOverdueTasks.length > 0
+        ? "Review overdue tasks and agree on priorities to prevent further delays."
+        : pulseHighPriority.length > 0
+          ? "Monitor high-priority tasks to keep the team on track."
+          : "Your team has no flagged overdue or high-priority open tasks. Keep monitoring progress."}
+    </p>
+  </div>
+</section>
 
     <section className="panel" style={{ marginBottom: "20px" }}>
       <h2>Task completion performance</h2>
