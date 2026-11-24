@@ -107,6 +107,9 @@ function App() {
   const [databaseError, setDatabaseError] = useState("");
   const [session, setSession] = useState(null);
   const [teamId, setTeamId] = useState(null);
+  const [aiRecommendations, setAiRecommendations] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
 
   const [teamActivity, setTeamActivity] = useState([]);
 const [activityLoading, setActivityLoading] = useState(false);
@@ -287,8 +290,7 @@ useEffect(() => {
   const [newPriority, setNewPriority] = useState("Medium");
 
   const [meetingNotes, setMeetingNotes] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-const [aiError, setAiError] = useState("");
+ 
 const [meetingResult, setMeetingResult] = useState(null);
 const [approvingIndex, setApprovingIndex] = useState(null);
 
@@ -885,6 +887,47 @@ if (!session) {
     </div>
   );
 }
+
+
+const generateAIRecommendations = async () => {
+  if (!tasks.length) {
+    setAiError("No tasks available to analyse.");
+    return;
+  }
+
+  setAiLoading(true);
+  setAiError("");
+
+  try {
+    const taskData = tasks.map((task) => ({
+      title: task.title,
+      project: task.project,
+      owner: task.owner,
+      priority: task.priority,
+      status: task.status,
+      overdue: task.overdue,
+      creation_source: task.creation_source,
+      created_at: task.created_at,
+      completed_at: task.completed_at,
+    }));
+
+    const { data, error } = await supabase.functions.invoke(
+      "team-recommendations",
+      { body: { tasks: taskData } }
+    );
+
+    if (error) throw error;
+
+    setAiRecommendations(data?.recommendations || []);
+  } catch (error) {
+    setAiError(error.message || "Could not generate recommendations.");
+    setAiRecommendations([]);
+  } finally {
+    setAiLoading(false);
+  }
+};
+
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -1412,139 +1455,121 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
     </div>
 
 
-<section className="panel" style={{ marginBottom: "20px" }}>
-  <p className="eyebrow">AUTOMATED TEAM INSIGHTS</p>
-  <h2>✦ Team Pulse</h2>
-
-  <p className="muted-text">
-    A live overview of your team's workload and task health.
-  </p>
-
-  <div style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-    gap: "20px",
-    marginTop: "20px"
-  }}>
+<section className="panel team-pulse-panel">
+  <div className="team-pulse-heading">
     <div>
-      <p className="muted-text">Open tasks</p>
-      <h1>{pulseOpenTasks.length}</h1>
-    </div>
-
-    <div>
-      <p className="muted-text">Overdue tasks</p>
-      <h1>{pulseOverdueTasks.length}</h1>
-    </div>
-
-    <div>
-      <p className="muted-text">High-priority tasks</p>
-      <h1>{pulseHighPriority.length}</h1>
+      <p className="eyebrow">AUTOMATED TEAM INSIGHTS</p>
+      <h2>✦ Team Pulse</h2>
+      <p className="muted-text">
+        A live overview of your team's workload and task health.
+      </p>
     </div>
   </div>
 
-  <div style={{ marginTop: "20px" }}>
+  <div className="pulse-stats">
+    <div className="pulse-stat">
+      <span className="pulse-stat-label">Open tasks</span>
+      <h1>{pulseOpenTasks.length}</h1>
+      <span className="pulse-stat-note">Tasks in progress</span>
+    </div>
+
+    <div className="pulse-stat pulse-stat-overdue">
+      <span className="pulse-stat-label">Overdue tasks</span>
+      <h1>{pulseOverdueTasks.length}</h1>
+      <span className="pulse-stat-note">Require attention</span>
+    </div>
+
+    <div className="pulse-stat pulse-stat-priority">
+      <span className="pulse-stat-label">High priority</span>
+      <h1>{pulseHighPriority.length}</h1>
+      <span className="pulse-stat-note">Need close monitoring</span>
+    </div>
+  </div>
+
+  <div className="pulse-workload">
     <h3>Workload distribution</h3>
 
-    {pulseWorkload.length > 0 ? (
-      pulseWorkload.map(([owner, count]) => (
-        <div key={owner} style={{
-          display: "flex",
-          justifyContent: "space-between",
-          padding: "10px 0",
-          borderBottom: "1px solid #edf0f5"
-        }}>
+
+{pulseWorkload.length > 0 ? (
+  pulseWorkload.map(([owner, count]) => {
+    const maxWorkload = Math.max(
+      ...pulseWorkload.map(([, taskCount]) => taskCount),
+      1
+    );
+
+    const workloadPercent = (count / maxWorkload) * 100;
+
+    return (
+      <div className="pulse-workload-entry" key={owner}>
+        <div className="pulse-workload-row">
           <span>{owner}</span>
           <strong>{count} open tasks</strong>
         </div>
-      ))
-    ) : (
-      <p className="muted-text">No outstanding tasks.</p>
-    )}
+
+        <div className="pulse-workload-track">
+          <div
+            className="pulse-workload-fill"
+            style={{ width: `${workloadPercent}%` }}
+          />
+        </div>
+      </div>
+    );
+  })
+) : (
+  <p className="muted-text">No outstanding tasks.</p>
+)}
+
   </div>
 
-  <div style={{
-    marginTop: "20px",
-    padding: "14px",
-    borderRadius: "10px",
-    background: "#f5f6fb"
-  }}>
-    <strong>Team recommendation</strong>
-    <p className="muted-text">
-      {pulseOverdueTasks.length > 0
-        ? "Review overdue tasks and agree on priorities to prevent further delays."
-        : pulseHighPriority.length > 0
-          ? "Monitor high-priority tasks to keep the team on track."
-          : "Your team has no flagged overdue or high-priority open tasks. Keep monitoring progress."}
-    </p>
+<div className="pulse-recommendation">
+  <div className="ai-recommendation-heading">
+    <div>
+      <strong>✦ AI Team Recommendations</strong>
+      <p className="muted-text">
+        Insights generated from your team's task data.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={generateAIRecommendations}
+      disabled={aiLoading || tasks.length === 0}
+    >
+      {aiLoading ? "Analysing..." : "Generate insights"}
+    </button>
   </div>
+
+  {aiError && (
+    <p className="muted-text">{aiError}</p>
+  )}
+
+  {aiRecommendations.length > 0 ? (
+    <div className="ai-recommendations-list">
+      {aiRecommendations.map((item, index) => (
+        <div className="ai-recommendation-item" key={index}>
+          <strong>{item.title}</strong>
+
+          <span>{item.priority} priority</span>
+
+          <p>{item.insight}</p>
+
+          <p>
+            <strong>Suggested action:</strong> {item.action}
+          </p>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="muted-text">
+      {aiLoading
+        ? "Gemini is analysing your team's tasks..."
+        : "Click Generate insights to receive AI-powered recommendations."}
+    </p>
+  )}
+</div>
 </section>
 
-    <section className="panel" style={{ marginBottom: "20px" }}>
-      <h2>Task completion performance</h2>
 
-      <p className="muted-text">
-        Compare completion outcomes for manual and AI-assisted tasks.
-      </p>
-
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: "25px",
-        marginTop: "24px"
-      }}>
-
-        <div>
-          <strong>Manual tasks</strong>
-
-          <h1>
-            {(() => {
-              const group = tasks.filter(
-                task => task.creation_source === "manual"
-              );
-              const completed = group.filter(task =>
-                ["done", "completed"].includes(
-                  (task.status || "").toLowerCase()
-                )
-              ).length;
-
-              return group.length
-                ? `${Math.round(completed / group.length * 100)}%`
-                : "No data";
-            })()}
-          </h1>
-
-          <p className="muted-text">
-            Completion rate for manually created tasks.
-          </p>
-        </div>
-
-        <div>
-          <strong>AI-assisted tasks</strong>
-
-          <h1>
-            {(() => {
-              const group = tasks.filter(
-                task => task.creation_source === "ai_assisted"
-              );
-              const completed = group.filter(task =>
-                ["done", "completed"].includes(
-                  (task.status || "").toLowerCase()
-                )
-              ).length;
-
-              return group.length
-                ? `${Math.round(completed / group.length * 100)}%`
-                : "No data";
-            })()}
-          </h1>
-
-          <p className="muted-text">
-            Completion rate for AI-assisted tasks.
-          </p>
-        </div>
-
-      </div>
-    </section>
 
     <section className="panel">
 
@@ -1557,10 +1582,11 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
     Compare task completion outcomes across the two creation methods.
   </p>
 
-  {[
-    { label: "Manual tasks", source: "manual", color: "#368BCE" },
-    { label: "AI-assisted tasks", source: "ai_assisted", color: "#9876DD" },
-  ].map((group) => {
+{[
+  { label: "Manual tasks", source: "manual", color: "#08B6CE" },
+  { label: "AI-assisted tasks", source: "ai_assisted", color: "#DFFF4F" },
+].map((group) => {
+
     const groupTasks = tasks.filter(
       (task) => (task.creation_source || "manual") === group.source
     );
@@ -1694,7 +1720,7 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
             minWidth: 0
           }}>
             <div style={{
-              height: "130px",
+              height: "160px",
               display: "flex",
               alignItems: "end",
               gap: "3px",
@@ -1702,16 +1728,16 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
               justifyContent: "center",
               borderBottom: "1px solid #e7e8f0"
             }}>
-              {[ 
-                { value: day.manual, color: "#368BCE" },
-                { value: day.ai, color: "#9876DD" },
-                { value: day.completed, color: "#239B74" }
-              ].map((bar, i) => (
+             {[
+  { value: day.manual, color: "#08B6CE" },
+  { value: day.ai, color: "#DFFF4F" },
+  { value: day.completed, color: "#111827" }
+].map((bar, i) => (
                 <div
                   key={i}
                   title={`${bar.value} tasks`}
                   style={{
-                    width: "7px",
+                    width: "10px",
                     maxWidth: "22%",
                     height: bar.value
                       ? `${Math.max(4, bar.value / maxValue * 115)}px`
@@ -1742,10 +1768,10 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
     marginTop: "24px"
   }}>
     {[
-      { label: "Manual created", color: "#368BCE" },
-      { label: "AI-assisted created", color: "#9876DD" },
-      { label: "Completed", color: "#239B74" }
-    ].map(item => (
+  { label: "Manual created", color: "#08B6CE" },
+  { label: "AI-assisted created", color: "#DFFF4F" },
+  { label: "Completed", color: "#111827" }
+].map(item => (
       <div key={item.label} style={{
         display: "flex",
         alignItems: "center",
@@ -1767,12 +1793,19 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
 
 
 
-<section className="panel" style={{ marginBottom: "20px" }}>
-  <h2>Recent Team Activity</h2>
 
-  <p className="muted-text">
-    Follow recent task creation and completion across your team.
-  </p>
+<section className="panel recent-activity-panel">
+  <div className="activity-heading">
+    <div>
+      <h2>Recent Team Activity</h2>
+      <p className="muted-text">
+        Follow recent task creation and completion across your team.
+      </p>
+    </div>
+    <span className="activity-count">
+      {teamActivity.length} events
+    </span>
+  </div>
 
   {activityLoading ? (
     <p className="muted-text">Loading team activity...</p>
@@ -1785,72 +1818,47 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
       No team activity has been recorded yet.
     </p>
   ) : (
-    <div style={{
-      display: "grid",
-      gap: "16px",
-      marginTop: "22px"
-    }}>
+    <div className="activity-list">
       {teamActivity.map((item) => {
         const relatedTask = tasks.find(
           task => String(task.id) === String(item.task_id)
         );
 
-        const eventLabel =
-          item.event_type === "task_created_ai"
-            ? "AI-assisted task created"
-            : item.event_type === "task_created_manual"
-              ? "Manual task created"
-              : "Task status updated";
+        const isAI = item.event_type === "task_created_ai";
+        const isStatus = item.event_type === "status_changed";
+
+        const eventLabel = isAI
+          ? "AI-assisted task created"
+          : item.event_type === "task_created_manual"
+            ? "Manual task created"
+            : "Task status updated";
 
         return (
-          <div
-            key={item.id}
-            style={{
-              display: "flex",
-              gap: "13px",
-              alignItems: "flex-start",
-              borderBottom: "1px solid #eceef4",
-              paddingBottom: "14px"
-            }}
-          >
-            <span className="metric-icon purple-icon">
-              {item.event_type === "task_created_ai"
-                ? "✦"
-                : item.event_type === "status_changed"
-                  ? "✓"
-                  : "+"}
+          <div className="activity-item" key={item.id}>
+            <span className={`activity-indicator ${
+              isAI ? "activity-ai" : isStatus ? "activity-status" : "activity-manual"
+            }`}>
+              {isAI ? "✦" : isStatus ? "✓" : "+"}
             </span>
 
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <strong style={{
-                fontSize: "13px",
-                color: "#30354b"
-              }}>
-                {eventLabel}
-              </strong>
+            <div className="activity-content">
+              <strong>{eventLabel}</strong>
 
-              <p style={{
-                fontSize: "12px",
-                marginTop: "5px",
-                overflowWrap: "anywhere"
-              }}>
+              <p className="activity-task-title">
                 {relatedTask?.title || `Task #${item.task_id}`}
               </p>
 
-              {item.event_type === "status_changed" && (
-                <p className="muted-text">
+              {isStatus && (
+                <p className="muted-text activity-status-text">
                   {item.previous_status || "Previous status"}
                   {" → "}
                   {item.new_status || "New status"}
                 </p>
               )}
 
-              <p className="muted-text" style={{
-                fontSize: "10px",
-                marginTop: "6px"
-              }}>
+              <span className="activity-time">
                 {new Date(item.happened_at).toLocaleString()}
-              </p>
+              </span>
             </div>
           </div>
         );
@@ -1858,6 +1866,7 @@ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
     </div>
   )}
 </section>
+
 
 
 
